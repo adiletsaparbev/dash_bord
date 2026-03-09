@@ -1,60 +1,115 @@
 package com.example.demo.controllers;
 
-import com.example.demo.entity.Attachment;
+import com.example.demo.dto.response.AttachmentResponse;
 import com.example.demo.enums.EntityType;
 import com.example.demo.services.AttachmentService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/attachments")
+@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class AttachmentController {
 
     private final AttachmentService attachmentService;
 
-    // POST /api/attachments/upload?entityType=TASK&entityId=1
-    @PostMapping("/upload")
-    public ResponseEntity<Attachment> upload(
+    // Upload — все авторизованные
+    @PostMapping("/api/attachments/upload")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<AttachmentResponse> upload(
             @RequestParam MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        return ResponseEntity.ok(
+                attachmentService.upload(file, userDetails.getUsername())
+        );
+    }
+
+    // Привязать к задаче — ADMIN / MANAGER / PM
+    @PostMapping("/api/tasks/{taskId}/attachments")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM')")
+    public ResponseEntity<AttachmentResponse> attachToTask(
+            @PathVariable Long taskId,
+            @RequestParam Long attachmentId,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        return ResponseEntity.ok(
+                attachmentService.bindToEntity(
+                        attachmentId,
+                        EntityType.TASK,
+                        taskId,
+                        userDetails.getUsername()
+                )
+        );
+    }
+
+    // Привязать к комменту — все роли
+    @PostMapping("/api/comments/{commentId}/attachments")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<AttachmentResponse> attachToComment(
+            @PathVariable Long commentId,
+            @RequestParam Long attachmentId,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        return ResponseEntity.ok(
+                attachmentService.bindToEntity(
+                        attachmentId,
+                        EntityType.COMMENT,
+                        commentId,
+                        userDetails.getUsername()
+                )
+        );
+    }
+
+    // Список файлов — доступ зависит от задачи
+    @GetMapping("/api/attachments")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<List<AttachmentResponse>> list(
             @RequestParam EntityType entityType,
             @RequestParam Long entityId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                attachmentService.getAttachments(entityType, entityId, userDetails.getUsername())
+        );
+    }
+
+    // Скачать файл — доступ зависит от задачи
+    @GetMapping("/api/attachments/{id}/download")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<Resource> download(
+            @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) throws IOException {
 
-        return ResponseEntity.ok(
-                attachmentService.upload(file, entityType, entityId, userDetails.getUsername()));
-    }
+        AttachmentService.FileDownloadDto downloadData = attachmentService.download(id, userDetails.getUsername());
 
-    // GET /api/attachments?entityType=TASK&entityId=1
-    @GetMapping
-    public ResponseEntity<List<Attachment>> list(
-            @RequestParam EntityType entityType,
-            @RequestParam Long entityId) {
-        return ResponseEntity.ok(attachmentService.getAttachments(entityType, entityId));
-    }
+        // Кодируем имя файла для корректной передачи по HTTP
+        String encodedFileName = URLEncoder.encode(downloadData.fileName(), StandardCharsets.UTF_8).replace("+", "%20");
 
-    // GET /api/attachments/{id}/download
-    @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Long id) throws IOException {
-        Resource resource = attachmentService.download(id);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+                // attachment - заставляет браузер скачать файл.
+                // Если поменять на inline - браузер попытается открыть картинку/pdf прямо во вкладке
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, downloadData.contentType()) // Подставляем реальный MIME-тип
+                .body(downloadData.resource());
     }
 
-    // DELETE /api/attachments/{id}
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws IOException {
-        attachmentService.delete(id);
+    // Удаление — ADMIN или uploader с учётом правил
+    @DeleteMapping("/api/attachments/{attachmentId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long attachmentId,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        attachmentService.delete(attachmentId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.example.demo.enums.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +17,7 @@ public class Subtask {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
@@ -23,6 +25,7 @@ public class Subtask {
     @Column(nullable = false, length = 200)
     private String title;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
     private User assignee;

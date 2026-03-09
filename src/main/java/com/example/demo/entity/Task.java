@@ -2,12 +2,15 @@ package com.example.demo.entity;
 
 import com.example.demo.enums.Priority;
 import com.example.demo.enums.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "tasks")
@@ -24,6 +27,7 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
@@ -32,9 +36,6 @@ public class Task {
     @JoinColumn(name = "creator_id")
     private User creator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pm_id")
-    private User pm;
 
     @Enumerated(EnumType.STRING)
     private TaskStatus status = TaskStatus.NEW;
@@ -47,7 +48,8 @@ public class Task {
     private LocalDateTime completedAt;
     private boolean isOverdue = false;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TaskAssignee> assignees;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
@@ -56,23 +58,33 @@ public class Task {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private List<Comment> comments;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
-    private List<TaskTag> tags;
+    @ManyToMany
+    @JoinTable(
+            name = "task_tags_relation",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
+
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
         // Автопроверка просрочки
+        if (dueDate != null && dueDate.isBefore(LocalDate.now()) && status != TaskStatus.DONE) {
+            isOverdue = true;
+        }
+    }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        // ← добавить:
         if (dueDate != null && dueDate.isBefore(LocalDate.now()) && status != TaskStatus.DONE) {
             isOverdue = true;
         }

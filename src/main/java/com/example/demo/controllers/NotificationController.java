@@ -1,10 +1,13 @@
 package com.example.demo.controllers;
 
-import com.example.demo.entity.Notification;
+import com.example.demo.dto.response.NotificationResponse;
+import com.example.demo.entity.User;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.NotificationService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
+@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class NotificationController {
 
@@ -21,24 +25,22 @@ public class NotificationController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<Notification>> getAll(
+    public ResponseEntity<List<NotificationResponse>> getAll(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        return ResponseEntity.ok(notificationService.getAll(userId));
+        return ResponseEntity.ok(notificationService.getAll(getUserId(userDetails)));
     }
 
     @GetMapping("/unread")
-    public ResponseEntity<List<Notification>> getUnread(
+    public ResponseEntity<List<NotificationResponse>> getUnread(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        return ResponseEntity.ok(notificationService.getUnread(userId));
+        return ResponseEntity.ok(notificationService.getUnread(getUserId(userDetails)));
     }
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> countUnread(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
-        return ResponseEntity.ok(Map.of("count", notificationService.countUnread(userId)));
+        return ResponseEntity.ok(
+                Map.of("count", notificationService.countUnread(getUserId(userDetails))));
     }
 
     @PatchMapping("/{id}/read")
@@ -54,8 +56,29 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        notificationService.delete(id, getUser(userDetails));
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAllForUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        notificationService.deleteAllForUser(userId, getUser(userDetails));
+        return ResponseEntity.noContent().build();
+    }
+
     private Long getUserId(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow().getId();
+        return getUser(userDetails).getId();
+    }
+
+    private User getUser(UserDetails userDetails) {
+        return userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
     }
 }

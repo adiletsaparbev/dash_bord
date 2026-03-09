@@ -15,13 +15,10 @@ public class Attachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // TASK / SUBTASK / COMMENT
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private EntityType entityType;
 
-    // ID задачи / подзадачи / комментария
-    @Column(nullable = false)
     private Long entityId;
 
     @ManyToOne(fetch = FetchType.LAZY)

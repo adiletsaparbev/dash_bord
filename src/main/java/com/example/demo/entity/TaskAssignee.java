@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,17 +15,15 @@ public class TaskAssignee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
-    @ManyToOne
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    // ASSIGNEE = исполнитель, WATCHER = наблюдатель
-    @Column(length = 20)
-    private String role = "ASSIGNEE";
 
     private LocalDateTime assignedAt;
 
@@ -33,3 +32,4 @@ public class TaskAssignee {
         assignedAt = LocalDateTime.now();
     }
 }
+

@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,17 +9,23 @@ import java.util.List;
 
 @Entity
 @Table(name = "comments")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
@@ -26,7 +33,8 @@ public class Comment {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentMention> mentions;
 
     private LocalDateTime createdAt;

@@ -1,7 +1,11 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tags")
@@ -18,7 +22,7 @@ public class Tag {
     @Column(length = 7)
     private String color = "#4472C4";
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id")
-    private Project project;
+    @JsonIgnore
+    @ManyToMany(mappedBy = "tags")
+    private Set<Task> tasks = new HashSet<>();
 }

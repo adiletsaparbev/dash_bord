@@ -2,7 +2,6 @@ package com.example.demo.dto.request;
 
 import com.example.demo.enums.Priority;
 import com.example.demo.enums.TaskStatus;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -21,16 +20,22 @@ public class TaskRequest {
     @NotNull(message = "Проект обязателен")
     private Long projectId;
 
-    @NotNull(message = "Укажите хотя бы одного исполнителя")
-    private List<Long> assigneeIds;
-
-    private Long pmId;
     private Priority priority = Priority.MEDIUM;
+
+    // при создании можно не передавать, сервис сам поставит NEW
     private TaskStatus status = TaskStatus.NEW;
+
     private LocalDate startDate;
 
-    @Future(message = "Срок должен быть в будущем")
+    @NotNull(message = "Срок выполнения обязателен")
     private LocalDate dueDate;
 
+    @NotNull(message = "Исполнитель должен быть выбран")
+    private List<Long> assigneeIds;
+
     private List<Long> tagIds;
+    private List<Long> attachmentIds;
+
+    // Список подзадач для создания вместе с задачей
+    private List<SubtaskRequest> subtasks;
 }

@@ -1,5 +1,7 @@
 package com.example.demo.entity;
 
+import com.example.demo.enums.ProjectStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,17 +23,21 @@ public class Project {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pm_id")
     private User pm;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String status = "ACTIVE";
+    private ProjectStatus status = ProjectStatus.ACTIVE;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
     private List<ProjectMember> members;
 

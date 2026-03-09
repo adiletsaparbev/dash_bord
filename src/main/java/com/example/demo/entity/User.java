@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.example.demo.enums.Role;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +21,7 @@ public class User {
 
     @Column(nullable = false, unique = true, length = 150)
     private String email;
-
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 

@@ -41,67 +41,67 @@ public class ViewController {
 
     // ── Главная: список проектов ─────────────────────────
 
-    @GetMapping({"/", "/projects"})
-    public String projectsPage(Model model,
-                               @AuthenticationPrincipal UserDetails userDetails) {
-
-        List<Project> projects = projectService.getAll();
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-        long unreadCount = notificationService.countUnread(user.getId());
-
-        model.addAttribute("projects", projects);
-        model.addAttribute("currentUser", user);
-        model.addAttribute("unreadCount", unreadCount);
-
-        return "projects"; // → templates/projects.html
-    }
+//    @GetMapping({"/", "/projects"})
+//    public String projectsPage(Model model,
+//                               @AuthenticationPrincipal UserDetails userDetails) {
+//
+//        List<Project> projects = projectService.getAll();
+//        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+//        long unreadCount = notificationService.countUnread(user.getId());
+//
+//        model.addAttribute("projects", projects);
+//        model.addAttribute("currentUser", user);
+//        model.addAttribute("unreadCount", unreadCount);
+//
+//        return "projects"; // → templates/projects.html
+//    }
 
     // ── Kanban доска ──────────────────────────────────────
 
-    @GetMapping("/projects/{id}/board")
-    public String kanbanPage(@PathVariable Long id,
-                             Model model,
-                             @AuthenticationPrincipal UserDetails userDetails) {
-
-        Project project = projectService.getById(id);
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-        long unreadCount = notificationService.countUnread(user.getId());
-
-        List<Task> newTasks      = taskService.filterByStatus(id, TaskStatus.NEW);
-        List<Task> inProgress    = taskService.filterByStatus(id, TaskStatus.IN_PROGRESS);
-        List<Task> review        = taskService.filterByStatus(id, TaskStatus.REVIEW);
-        List<Task> done          = taskService.filterByStatus(id, TaskStatus.DONE);
-
-        model.addAttribute("project", project);
-        model.addAttribute("newTasks", newTasks);
-        model.addAttribute("inProgress", inProgress);
-        model.addAttribute("review", review);
-        model.addAttribute("done", done);
-        model.addAttribute("currentUser", user);
-        model.addAttribute("unreadCount", unreadCount);
-        model.addAttribute("priorities", Priority.values());
-        model.addAttribute("statuses", TaskStatus.values());
-
-        return "kanban"; // → templates/kanban.html
-    }
+//    @GetMapping("/projects/{id}/board")
+//    public String kanbanPage(@PathVariable Long id,
+//                             Model model,
+//                             @AuthenticationPrincipal UserDetails userDetails) {
+//
+//        Project project = projectService.getById(id);
+//        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+//        long unreadCount = notificationService.countUnread(user.getId());
+//
+//        List<Task> newTasks      = taskService.filterByStatus(id, TaskStatus.NEW);
+//        List<Task> inProgress    = taskService.filterByStatus(id, TaskStatus.IN_PROGRESS);
+//        List<Task> review        = taskService.filterByStatus(id, TaskStatus.REVIEW);
+//        List<Task> done          = taskService.filterByStatus(id, TaskStatus.DONE);
+//
+//        model.addAttribute("project", project);
+//        model.addAttribute("newTasks", newTasks);
+//        model.addAttribute("inProgress", inProgress);
+//        model.addAttribute("review", review);
+//        model.addAttribute("done", done);
+//        model.addAttribute("currentUser", user);
+//        model.addAttribute("unreadCount", unreadCount);
+//        model.addAttribute("priorities", Priority.values());
+//        model.addAttribute("statuses", TaskStatus.values());
+//
+//        return "kanban"; // → templates/kanban.html
+//    }
 
     // ── Детальная задача ──────────────────────────────────
 
-    @GetMapping("/tasks/{id}")
-    public String taskDetailPage(@PathVariable Long id,
-                                 Model model,
-                                 @AuthenticationPrincipal UserDetails userDetails) {
-
-        Task task = taskService.getTaskById(id);
-        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-        long unreadCount = notificationService.countUnread(user.getId());
-
-        model.addAttribute("task", task);
-        model.addAttribute("currentUser", user);
-        model.addAttribute("unreadCount", unreadCount);
-        model.addAttribute("priorities", Priority.values());
-        model.addAttribute("statuses", TaskStatus.values());
-
-        return "task-detail";
-    }
+//    @GetMapping("/tasks/{id}")
+//    public String taskDetailPage(@PathVariable Long id,
+//                                 Model model,
+//                                 @AuthenticationPrincipal UserDetails userDetails) {
+//
+//        Task task = taskService.getTaskById(id);
+//        var user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+//        long unreadCount = notificationService.countUnread(user.getId());
+//
+//        model.addAttribute("task", task);
+//        model.addAttribute("currentUser", user);
+//        model.addAttribute("unreadCount", unreadCount);
+//        model.addAttribute("priorities", Priority.values());
+//        model.addAttribute("statuses", TaskStatus.values());
+//
+//        return "task-detail";
+//    }
 }

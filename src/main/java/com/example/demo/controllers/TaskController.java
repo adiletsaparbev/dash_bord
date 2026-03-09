@@ -1,12 +1,14 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.request.TaskRequest;
-import com.example.demo.entity.Task;
-import com.example.demo.enums.TaskStatus;
+import com.example.demo.dto.request.TaskUpdateRequest;
+import com.example.demo.dto.response.TaskResponse;
 import com.example.demo.services.TaskService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -15,64 +17,69 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
+@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class TaskController {
 
     private final TaskService taskService;
 
-    // Получить все задачи проекта
-    @GetMapping("/project/{projectId}")
-    public ResponseEntity<List<Task>> getByProject(@PathVariable Long projectId) {
-        return ResponseEntity.ok(taskService.getTasksByProject(projectId));
+    // Список задач (фильтрация по роли внутри сервиса)
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<List<TaskResponse>> getAll(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(taskService.getAllTasks(userDetails.getUsername()));
+    }
+
+    // Поиск по названию и/или тегам
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<List<TaskResponse>> search(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) List<Long> tagIds,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                taskService.searchTasks(title, tagIds, userDetails.getUsername()));
+    }
+
+    // Создание задачи
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public ResponseEntity<TaskResponse> create(
+            @Valid @RequestBody TaskRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                taskService.createTask(request, userDetails.getUsername()));
     }
 
     // Получить одну задачу
-    @GetMapping("/{id}")
-    public ResponseEntity<Task> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.getTaskById(id));
-    }
-
-    // Создать задачу
-    @PostMapping
-    public ResponseEntity<Task> create(@Valid @RequestBody TaskRequest request,
-                                       @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(taskService.createTask(request, userDetails.getUsername()));
+    @GetMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+    public ResponseEntity<TaskResponse> getOne(
+            @PathVariable Long taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                taskService.getTaskById(taskId, userDetails.getUsername()));
     }
 
     // Обновить задачу
-    @PutMapping("/{id}")
-    public ResponseEntity<Task> update(@PathVariable Long id,
-                                       @Valid @RequestBody TaskRequest request,
-                                       @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(taskService.updateTask(id, request, userDetails.getUsername()));
-    }
-
-    // Обновить только статус (Kanban drag&drop)
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Task> updateStatus(@PathVariable Long id,
-                                             @RequestParam TaskStatus status,
-                                             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(taskService.updateStatus(id, status, userDetails.getUsername()));
+    @PatchMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM')")
+    public ResponseEntity<TaskResponse> update(
+            @PathVariable Long taskId,
+            @RequestBody TaskUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                taskService.updateTask(taskId, request, userDetails.getUsername()));
     }
 
     // Удалить задачу
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        taskService.deleteTask(id);
+    @DeleteMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        taskService.deleteTask(taskId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
-    }
-
-    // Поиск по названию
-    @GetMapping("/project/{projectId}/search")
-    public ResponseEntity<List<Task>> search(@PathVariable Long projectId,
-                                             @RequestParam String keyword) {
-        return ResponseEntity.ok(taskService.searchTasks(projectId, keyword));
-    }
-
-    // Фильтр по статусу
-    @GetMapping("/project/{projectId}/filter")
-    public ResponseEntity<List<Task>> filter(@PathVariable Long projectId,
-                                             @RequestParam TaskStatus status) {
-        return ResponseEntity.ok(taskService.filterByStatus(projectId, status));
     }
 }
