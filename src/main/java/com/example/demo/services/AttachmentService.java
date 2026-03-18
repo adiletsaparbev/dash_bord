@@ -311,7 +311,7 @@ public class AttachmentService {
 
         if (a.getUploader() != null) {
             r.setUploaderId(a.getUploader().getId());
-            r.setUploaderName(a.getUploader().getFullName());
+            r.setUploaderName(a.getUploader().getName() + " " + a.getUploader().getSurname());
         }
 
         return r;

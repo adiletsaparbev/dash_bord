@@ -44,7 +44,7 @@ public class TaskController {
 
     // Создание задачи
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM')")
     public ResponseEntity<TaskResponse> create(
             @Valid @RequestBody TaskRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -75,7 +75,7 @@ public class TaskController {
 
     // Удалить задачу
     @DeleteMapping("/{taskId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM')")
     public ResponseEntity<Void> delete(
             @PathVariable Long taskId,
             @AuthenticationPrincipal UserDetails userDetails) {

@@ -351,7 +351,8 @@ public class SubtaskService {
 
         if (subtask.getAssignee() != null) {
             r.setAssigneeId(subtask.getAssignee().getId());
-            r.setAssigneeName(subtask.getAssignee().getFullName());
+            r.setAssigneeName(subtask.getAssignee().getName());
+            r.setAssigneeSurname(subtask.getAssignee().getSurname());
         }
 
         return r;

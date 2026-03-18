@@ -6,7 +6,8 @@ import lombok.Data;
 public class EmployeePerformanceResponse {
 
     private Long userId;
-    private String fullName;
+    private String name;
+    private String surname;
     private String role;
     private String departmentName;
 

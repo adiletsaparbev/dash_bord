@@ -8,7 +8,10 @@ import lombok.Data;
 @Data
 public class RegisterRequest {
     @NotBlank
-    private String fullName;
+    private String name;
+
+    @NotBlank
+    private String surname;
 
     @Email
     @NotBlank

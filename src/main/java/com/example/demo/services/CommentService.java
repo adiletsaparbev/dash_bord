@@ -83,7 +83,7 @@ public class CommentService {
 
         // === УВЕДОМЛЕНИЕ: Новый комментарий ===
         // Уведомляем всех участников задачи (создатель + исполнители), кроме автора
-        String commentMsg = author.getFullName() + " оставил комментарий к задаче: \""
+        String commentMsg = author.getEmail() + " оставил комментарий к задаче: \""
                 + task.getTitle() + "\"";
 
         notificationService.notifyTaskParticipants(task, "NEW_COMMENT", commentMsg, author);
@@ -159,7 +159,7 @@ public class CommentService {
                 notificationService.send(
                         mentionedUser,
                         "MENTION",
-                        author.getFullName() + " упомянул вас в комментарии к задаче: \""
+                        author.getEmail() + " упомянул вас в комментарии к задаче: \""
                                 + comment.getTask().getTitle() + "\"",
                         comment.getTask()
                 );
@@ -240,7 +240,7 @@ public class CommentService {
 
         if (comment.getAuthor() != null) {
             r.setAuthorId(comment.getAuthor().getId());
-            r.setAuthorName(comment.getAuthor().getFullName());
+            r.setAuthorName(comment.getAuthor().getEmail());
         }
 
         List<CommentMention> mentions = commentMentionRepository.findByCommentId(comment.getId());
@@ -253,7 +253,7 @@ public class CommentService {
 
         r.setMentionUserNames(
                 mentions.stream()
-                        .map(m -> m.getMentionedUser().getFullName())
+                        .map(m -> m.getMentionedUser().getEmail())
                         .toList()
         );
 

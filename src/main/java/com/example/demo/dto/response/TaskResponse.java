@@ -15,7 +15,8 @@ public class TaskResponse {
 
     private String status;
     private String priority;
-
+    private Integer estimatedHours;
+    private Integer actualHours;
     private LocalDate startDate;
     private LocalDate dueDate;
 

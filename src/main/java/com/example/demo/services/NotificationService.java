@@ -6,8 +6,10 @@ import com.example.demo.enums.Role;
 import com.example.demo.exception.AccessDeniedException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repositories.NotificationRepository;
+import com.example.demo.repositories.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,10 +20,16 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final TaskRepository taskRepository;
 
     // =========================================================
-    // Отправить уведомление одному пользователю
+    // 1. Уведомление о перегрузке (>90%)
     // =========================================================
+
+    // =========================================================
+    // 2. Отправить уведомление одному пользователю (базовый метод)
+    // =========================================================
+    @Transactional
     public void send(User user, String type, String message, Task task) {
         Notification notification = Notification.builder()
                 .user(user)
@@ -34,9 +42,9 @@ public class NotificationService {
     }
 
     // =========================================================
-    // Уведомить всех участников задачи (создатель + исполнители)
-    // exclude — автор действия (не получает своё уведомление)
+    // 3. Уведомить всех участников задачи (создатель + исполнители)
     // =========================================================
+    @Transactional
     public void notifyTaskParticipants(Task task, String type, String message, User exclude) {
         if (task.getCreator() != null && !task.getCreator().getId().equals(exclude.getId())) {
             send(task.getCreator(), type, message, task);
@@ -50,9 +58,9 @@ public class NotificationService {
     }
 
     // =========================================================
-    // Проверка — уже отправляли TASK_OVERDUE сегодня?
-    // Используется планировщиком, чтобы не дублировать уведомления
+    // 4. Проверка — уже отправляли TASK_OVERDUE сегодня?
     // =========================================================
+    @Transactional(readOnly = true)
     public boolean wasOverdueNotificationSentToday(Long taskId, Long userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay   = startOfDay.plusDays(1);
@@ -63,31 +71,26 @@ public class NotificationService {
     }
 
     // =========================================================
-    // Получить все уведомления пользователя
+    // 5. Получение и чтение уведомлений
     // =========================================================
+    @Transactional(readOnly = true)
     public List<NotificationResponse> getAll(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream().map(this::toResponse).toList();
     }
 
-    // =========================================================
-    // Только непрочитанные
-    // =========================================================
+    @Transactional(readOnly = true)
     public List<NotificationResponse> getUnread(Long userId) {
         return notificationRepository.findByUserIdAndIsReadFalse(userId)
                 .stream().map(this::toResponse).toList();
     }
 
-    // =========================================================
-    // Количество непрочитанных (для бейджа колокольчика)
-    // =========================================================
+    @Transactional(readOnly = true)
     public long countUnread(Long userId) {
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
 
-    // =========================================================
-    // Пометить одно уведомление как прочитанное
-    // =========================================================
+    @Transactional
     public void markAsRead(Long id) {
         notificationRepository.findById(id).ifPresent(n -> {
             n.setRead(true);
@@ -95,18 +98,14 @@ public class NotificationService {
         });
     }
 
-    // =========================================================
-    // Пометить все уведомления пользователя как прочитанные
-    // =========================================================
+    @Transactional
     public void markAllAsRead(Long userId) {
         List<Notification> unread = notificationRepository.findByUserIdAndIsReadFalse(userId);
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
     }
 
-    // =========================================================
-    // При открытии задачи — читаем все уведомления по ней
-    // =========================================================
+    @Transactional
     public void markTaskNotificationsAsRead(Long taskId, Long userId) {
         List<Notification> notifications =
                 notificationRepository.findByTaskIdAndUserIdAndIsReadFalse(taskId, userId);
@@ -115,8 +114,9 @@ public class NotificationService {
     }
 
     // =========================================================
-    // Удалить одно уведомление — только ADMIN
+    // 6. Удаление (Только ADMIN)
     // =========================================================
+    @Transactional
     public void delete(Long notificationId, User currentUser) {
         if (currentUser.getRole() != Role.ADMIN) {
             throw new AccessDeniedException("Удалять уведомления может только администратор");
@@ -126,9 +126,7 @@ public class NotificationService {
         notificationRepository.delete(notification);
     }
 
-    // =========================================================
-    // Удалить все уведомления конкретного пользователя — только ADMIN
-    // =========================================================
+    @Transactional
     public void deleteAllForUser(Long targetUserId, User currentUser) {
         if (currentUser.getRole() != Role.ADMIN) {
             throw new AccessDeniedException("Удалять уведомления может только администратор");
@@ -137,6 +135,9 @@ public class NotificationService {
         notificationRepository.deleteAll(all);
     }
 
+    // =========================================================
+    // Вспомогательный маппер
+    // =========================================================
     private NotificationResponse toResponse(Notification n) {
         NotificationResponse r = new NotificationResponse();
         r.setId(n.getId());
