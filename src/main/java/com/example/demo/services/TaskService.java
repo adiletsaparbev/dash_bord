@@ -4,10 +4,7 @@ import com.example.demo.dto.request.TaskRequest;
 import com.example.demo.dto.request.TaskUpdateRequest;
 import com.example.demo.dto.response.TaskResponse;
 import com.example.demo.entity.*;
-import com.example.demo.enums.EntityType;
-import com.example.demo.enums.Priority;
-import com.example.demo.enums.Role;
-import com.example.demo.enums.TaskStatus;
+import com.example.demo.enums.*;
 import com.example.demo.exception.AccessDeniedException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repositories.*;
@@ -33,7 +30,21 @@ public class TaskService {
     private final SubtaskRepository subtaskRepository;
     private final TagRepository tagRepository;
     private final NotificationService notificationService;
-    private final TaskHistoryRepository taskHistoryRepository; // ← добавлен
+    private final TaskHistoryRepository taskHistoryRepository;
+    private final EmployeeService employeeService;
+
+    private void checkWorkloadForUsers(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) return;
+
+        for (Long userId : userIds) {
+            userRepository.findById(userId).ifPresent(user -> {
+                double currentWorkload = employeeService.calculateWorkload(user.getId());
+                if (currentWorkload >= 90.0) {
+                    employeeService.sendOverloadNotificationIfNeeded(user, currentWorkload);
+                }
+            });
+        }
+    }
 
     // =========================================================
     // 1. Список задач по ролям
@@ -101,6 +112,12 @@ public class TaskService {
                         "Руководитель может создавать задачи только в проектах своего отдела");
             }
         }
+        if (currentUser.getRole() == Role.PM) {
+            if (project.getPm() == null || !project.getPm().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException(
+                        "PM может создавать задачи только в проектах, где он назначен менеджером проекта");
+            }
+        }
 
         Task task = Task.builder()
                 .title(request.getTitle().trim())
@@ -108,8 +125,10 @@ public class TaskService {
                 .project(project)
                 .creator(currentUser)
                 .status(TaskStatus.NEW)
+                .estimatedHours(request.getEstimatedHours())
                 .priority(request.getPriority() != null ? request.getPriority() : Priority.MEDIUM)
                 .startDate(request.getStartDate())
+                .complexity(request.getComplexity() != null ? request.getComplexity() : Complexity.LOW)
                 .dueDate(request.getDueDate())
                 .tags(new HashSet<>())
                 .assignees(new ArrayList<>())
@@ -180,6 +199,10 @@ public class TaskService {
         // === История: создание задачи ===
         recordHistory(saved, currentUser, "created",
                 null, "Задача создана: \"" + saved.getTitle() + "\"");
+        taskRepository.flush();
+
+        // === Проверка перегрузки ПОСЛЕ сохранения задачи ===
+        checkWorkloadForUsers(request.getAssigneeIds());
 
         return toResponse(saved);
     }
@@ -193,7 +216,6 @@ public class TaskService {
         Task task = findTask(taskId);
         validateTaskAccess(user, task, "VIEW");
 
-        // Авто-прочитано: все уведомления этого пользователя по этой задаче
         notificationService.markTaskNotificationsAsRead(taskId, user.getId());
 
         return toResponse(task);
@@ -219,6 +241,12 @@ public class TaskService {
                 && !Objects.equals(request.getDescription(), task.getDescription())) {
             recordHistory(task, user, "description", task.getDescription(), request.getDescription());
             task.setDescription(request.getDescription());
+        }
+        if (request.getEstimatedHours() != null) {
+            task.setEstimatedHours(request.getEstimatedHours());
+        }
+        if (request.getActualHours() != null) {
+            task.setActualHours(request.getActualHours());
         }
 
         // --- Приоритет ---
@@ -277,10 +305,9 @@ public class TaskService {
         if (request.getAssigneeIds() != null && !request.getAssigneeIds().isEmpty()) {
             if (user.getRole() == Role.ADMIN || user.getRole() == Role.MANAGER) {
 
-                // Старые исполнители для истории
                 String oldAssignees = task.getAssignees() != null
                         ? task.getAssignees().stream()
-                        .map(a -> a.getUser().getFullName())
+                        .map(a -> a.getUser().getEmail())
                         .reduce((a, b) -> a + ", " + b).orElse("")
                         : "";
 
@@ -309,11 +336,15 @@ public class TaskService {
                             .task(task).user(assignee).build());
                 }
 
-                // Сохраняем задачу чтобы assignees были актуальны
+                // === Сначала сохраняем, потом проверяем загрузку ===
                 taskRepository.save(task);
 
+                taskRepository.flush();
+                // === Проверка перегрузки ПОСЛЕ сохранения ===
+                checkWorkloadForUsers(request.getAssigneeIds());
+
                 String newAssignees = task.getAssignees().stream()
-                        .map(a -> a.getUser().getFullName())
+                        .map(a -> a.getUser().getEmail())
                         .reduce((a, b) -> a + ", " + b).orElse("");
 
                 recordHistory(task, user, "assignees", oldAssignees, newAssignees);
@@ -362,7 +393,6 @@ public class TaskService {
 
     // =========================================================
     // Запись истории изменений
-    // Не пишем запись, если значение не изменилось
     // =========================================================
     private void recordHistory(Task task, User changedBy,
                                String fieldName, String oldValue, String newValue) {
@@ -472,26 +502,28 @@ public class TaskService {
         r.setOverdue(task.isOverdue());
         r.setCompletedAt(task.getCompletedAt());
         r.setCreatedAt(task.getCreatedAt());
+        r.setEstimatedHours(task.getEstimatedHours());
+        r.setActualHours(task.getActualHours());
 
         if (task.getProject() != null) {
             r.setProjectId(task.getProject().getId());
             r.setProjectName(task.getProject().getName());
             if (task.getProject().getPm() != null) {
                 r.setPmId(task.getProject().getPm().getId());
-                r.setPmName(task.getProject().getPm().getFullName());
+                r.setPmName(task.getProject().getPm().getName() + " " + task.getProject().getPm().getSurname());
             }
         }
 
         if (task.getCreator() != null) {
             r.setCreatorId(task.getCreator().getId());
-            r.setCreatorName(task.getCreator().getFullName());
+            r.setCreatorName(task.getCreator().getName() + " " + task.getCreator().getSurname());
         }
 
         if (task.getAssignees() != null) {
             r.setAssigneeIds(task.getAssignees().stream()
                     .map(a -> a.getUser().getId()).toList());
             r.setAssigneeNames(task.getAssignees().stream()
-                    .map(a -> a.getUser().getFullName()).toList());
+                    .map(a -> a.getUser().getEmail()).toList());
         }
 
         if (task.getTags() != null && !task.getTags().isEmpty()) {

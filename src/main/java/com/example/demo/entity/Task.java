@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.example.demo.enums.Complexity;
 import com.example.demo.enums.Priority;
 import com.example.demo.enums.TaskStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -47,6 +48,8 @@ public class Task {
     private LocalDate dueDate;
     private LocalDateTime completedAt;
     private boolean isOverdue = false;
+    @Enumerated(EnumType.STRING)
+    private Complexity complexity = Complexity.MEDIUM;
 
     @JsonIgnore
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -57,6 +60,11 @@ public class Task {
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private List<Comment> comments;
+    @Column(name = "estimated_hours")
+    private Integer estimatedHours; // Оценка (например, 8)
+
+    @Column(name = "actual_hours")
+    private Integer actualHours;    // Факт (например, 10)
 
     @ManyToMany
     @JoinTable(

@@ -28,7 +28,7 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return new JwtResponse(token, user.getEmail(), user.getRole().name(), user.getFullName());
+        return new JwtResponse(token, user.getEmail(), user.getRole().name(), user.getName(), user.getSurname());
     }
 
     public String register(RegisterRequest request) {
@@ -37,7 +37,8 @@ public class AuthService {
         }
 
         User user = User.builder()
-                .fullName(request.getFullName())
+                .name(request.getName())
+                .surname(request.getSurname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())

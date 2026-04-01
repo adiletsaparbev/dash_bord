@@ -1,7 +1,8 @@
 package com.example.demo.dto.record;
 
 public record UserCreateDto(
-        String fullName,
+        String name,
+        String surname,
         String email,
         String password,
         String role,

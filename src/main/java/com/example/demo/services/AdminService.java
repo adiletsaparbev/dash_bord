@@ -31,7 +31,8 @@ public class AdminService {
                         d.getName(),
                         d.getManager() == null ? null : new ManagerDto(
                                 d.getManager().getId(),
-                                d.getManager().getFullName(),
+                                d.getManager().getName(),
+                                d.getManager().getSurname(),
                                 d.getManager().getEmail(),
                                 d.getManager().getRole().name()
                         )
@@ -75,7 +76,8 @@ public class AdminService {
                 d.getName(),
                 m == null ? null : new ManagerDto(
                         m.getId(),
-                        m.getFullName(),
+                        m.getName(),
+                        m.getSurname(),
                         m.getEmail(),
                         m.getRole().name()
                 )
@@ -85,7 +87,8 @@ public class AdminService {
         Department d = u.getDepartment();
         return new UserDto(
                 u.getId(),
-                u.getFullName(),
+                u.getName(),
+                u.getSurname(),
                 u.getEmail(),
                 u.getRole().name(),
                 u.isActive(),
@@ -103,7 +106,8 @@ public class AdminService {
                 p.getStatus() == null ? null : p.getStatus(),
                 pm == null ? null : new UserShortDto(
                         pm.getId(),
-                        pm.getFullName(),
+                        pm.getName(),
+                        pm.getSurname(),
                         pm.getEmail(),
                         pm.getRole().name(),
                         pm.isActive()
@@ -125,7 +129,8 @@ public class AdminService {
 
     public UserDto createUser(UserCreateDto dto) {
         User u = new User();
-        u.setFullName(dto.fullName());
+        u.setName(dto.name());
+        u.setSurname(dto.surname());
         u.setEmail(dto.email());
         u.setPassword(passwordEncoder.encode(dto.password()));
         u.setRole(Role.valueOf(dto.role()));
@@ -142,7 +147,8 @@ public class AdminService {
     public UserDto updateUser(Long id, UserUpdateDto dto) {
         User u = userRepository.findById(id).orElseThrow();
 
-        if (dto.fullName() != null) u.setFullName(dto.fullName());
+        if (dto.name() != null) u.setName(dto.name());
+        if (dto.surname() != null) u.setSurname(dto.surname());
         if (dto.role() != null) u.setRole(Role.valueOf(dto.role()));
 
         if (dto.departmentId() != null) {

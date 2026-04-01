@@ -16,6 +16,7 @@ public class SubtaskResponse {
 
     private Long assigneeId;
     private String assigneeName;
+    private String assigneeSurname;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

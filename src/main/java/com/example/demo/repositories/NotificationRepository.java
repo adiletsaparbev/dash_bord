@@ -1,6 +1,7 @@
 package com.example.demo.repositories;
 
 import com.example.demo.entity.Notification;
+import com.example.demo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     // Только непрочитанные
     List<Notification> findByUserIdAndIsReadFalse(Long userId);
+    boolean existsByUserIdAndTypeAndMessageContainingAndCreatedAtAfter(
+            Long userId, String type, String partOfMessage, LocalDateTime time
+    );
+
 
     // Количество непрочитанных
     long countByUserIdAndIsReadFalse(Long userId);

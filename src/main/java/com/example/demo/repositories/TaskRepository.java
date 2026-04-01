@@ -42,4 +42,14 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
           AND t.status <> com.example.demo.enums.TaskStatus.DONE
     """)
     List<Task> findOverdueTasks(@Param("today") LocalDate today);
+
+    @Query("""
+        SELECT t FROM Task t
+        JOIN t.assignees a
+        WHERE a.user.id = :userId
+          AND t.status = 'DONE'
+          AND t.completedAt IS NOT NULL
+          AND t.createdAt IS NOT NULL
+    """)
+    List<Task> findCompletedTasksByUserId(@Param("userId") Long userId);
 }

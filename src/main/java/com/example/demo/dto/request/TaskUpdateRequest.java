@@ -14,6 +14,8 @@ public class TaskUpdateRequest {
     private String description;
     private Priority priority;
     private TaskStatus status;
+    private Integer estimatedHours;
+    private Integer actualHours;
     private LocalDate startDate;
     private LocalDate dueDate;
     private List<Long> assigneeIds;

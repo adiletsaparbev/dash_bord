@@ -28,22 +28,22 @@ public class AdminController {
     private final UserRepository userRepository;
 
     // --- Профиль (Доступно всем авторизованным) ---
-    @GetMapping("/auth/me")
-    public ResponseEntity<MeDto> me(Principal principal) {
-        User u = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        Department d = u.getDepartment();
-
-        return ResponseEntity.ok(new MeDto(
-                u.getId(),
-                u.getFullName(),
-                u.getEmail(),
-                u.getRole().name(),
-                d != null ? d.getId() : null,
-                d != null ? d.getName() : null
-        ));
-    }
+//    @GetMapping("/auth/me")
+//    public ResponseEntity<MeDto> me(Principal principal) {
+//        User u = userRepository.findByEmail(principal.getName())
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+//
+//        Department d = u.getDepartment();
+//
+//        return ResponseEntity.ok(new MeDto(
+//                u.getId(),
+//                u.getName(),
+//                u.getEmail(),
+//                u.getRole().name(),
+//                d != null ? d.getId() : null,
+//                d != null ? d.getName() : null
+//        ));
+//    }
 
     // --- Отделы ---
     @GetMapping("/departments")

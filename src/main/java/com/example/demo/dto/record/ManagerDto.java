@@ -5,7 +5,8 @@ import com.example.demo.entity.User;
 
 public record ManagerDto(
         Long id,
-        String fullName,
+        String name,
+        String surname,
         String email,
         String role
 ) {}

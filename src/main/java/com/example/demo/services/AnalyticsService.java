@@ -216,7 +216,8 @@ public class AnalyticsService {
 
             EmployeePerformanceResponse r = new EmployeePerformanceResponse();
             r.setUserId(emp.getId());
-            r.setFullName(emp.getFullName());
+            r.setName(emp.getName());
+            r.setSurname(emp.getSurname());
             r.setRole(emp.getRole().name());
             r.setDepartmentName(emp.getDepartment() != null
                     ? emp.getDepartment().getName() : null);
@@ -276,7 +277,7 @@ public class AnalyticsService {
 
         if (h.getChangedBy() != null) {
             r.setChangedById(h.getChangedBy().getId());
-            r.setChangedByName(h.getChangedBy().getFullName());
+            r.setChangedByName(h.getChangedBy().getName() + " " + h.getChangedBy().getSurname());
         }
 
         return r;

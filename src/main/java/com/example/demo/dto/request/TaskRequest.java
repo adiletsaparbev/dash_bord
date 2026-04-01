@@ -1,5 +1,6 @@
 package com.example.demo.dto.request;
 
+import com.example.demo.enums.Complexity;
 import com.example.demo.enums.Priority;
 import com.example.demo.enums.TaskStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -21,10 +22,11 @@ public class TaskRequest {
     private Long projectId;
 
     private Priority priority = Priority.MEDIUM;
+    private Complexity complexity = Complexity.LOW;
 
     // при создании можно не передавать, сервис сам поставит NEW
     private TaskStatus status = TaskStatus.NEW;
-
+    private Integer estimatedHours;
     private LocalDate startDate;
 
     @NotNull(message = "Срок выполнения обязателен")
