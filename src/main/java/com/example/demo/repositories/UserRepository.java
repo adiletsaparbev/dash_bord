@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+<<<<<<< HEAD
 
     // Получить всех активных пользователей — участников указанных проектов (через
     // ProjectMember).
@@ -68,4 +69,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
             """)
     List<User> findActiveByDepartmentIdWithDepartment(@Param("departmentId") Long departmentId);
 
+=======
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
+
+
+
+    @Query("""
+    SELECT u FROM User u
+    WHERE (:query IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))
+                          OR LOWER(u.email)    LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')))
+    AND   (:role  IS NULL OR u.role = :role)
+    AND   (:deptId IS NULL OR u.department.id = :deptId)
+""")
+    List<User> searchUsers(
+            @Param("query")  String query,
+            @Param("role")   Role role,
+            @Param("deptId") Long deptId
+    );
+
+    List<User> findByDepartmentId(Long id);
+
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 }

@@ -141,7 +141,11 @@ public class AnalyticsService {
                     : taskRepository.findAll();
         } else if (user.getRole() == Role.MANAGER) {
             // Менеджер — только задачи своего отдела
+<<<<<<< HEAD
             Department dept = departmentRepository.findFirstByManagerId(user.getId())
+=======
+            Department dept = departmentRepository.findByManagerId(user.getId())
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                     .orElseThrow(() -> new AccessDeniedException(
                             "У руководителя нет назначенного отдела"));
             all = taskRepository.findByDepartmentId(dept.getId());
@@ -173,7 +177,11 @@ public class AnalyticsService {
                     .filter(u -> u.getRole() == Role.PM || u.getRole() == Role.TEAM)
                     .toList();
         } else if (currentUser.getRole() == Role.MANAGER) {
+<<<<<<< HEAD
             Department dept = departmentRepository.findFirstByManagerId(currentUser.getId())
+=======
+            Department dept = departmentRepository.findByManagerId(currentUser.getId())
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                     .orElse(null);
             if (dept == null) return List.of();
             employees = userRepository.findByDepartmentId(dept.getId()).stream()

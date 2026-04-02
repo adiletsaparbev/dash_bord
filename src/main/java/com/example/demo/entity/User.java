@@ -39,10 +39,13 @@ public class User {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+<<<<<<< HEAD
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserTelegram telegram;
 
 
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

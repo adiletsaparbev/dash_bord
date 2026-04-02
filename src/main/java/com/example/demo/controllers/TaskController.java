@@ -44,7 +44,11 @@ public class TaskController {
 
     // Создание задачи
     @PostMapping
+<<<<<<< HEAD
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM')")
+=======
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     public ResponseEntity<TaskResponse> create(
             @Valid @RequestBody TaskRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -64,7 +68,11 @@ public class TaskController {
 
     // Обновить задачу
     @PatchMapping("/{taskId}")
+<<<<<<< HEAD
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM','TEAM')")
+=======
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PM')")
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     public ResponseEntity<TaskResponse> update(
             @PathVariable Long taskId,
             @RequestBody TaskUpdateRequest request,

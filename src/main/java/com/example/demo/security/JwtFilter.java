@@ -25,13 +25,22 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+<<<<<<< HEAD
         return path.equals("/api/auth/login") || path.equals("/api/auth/register");
+=======
+        return path.startsWith("/api/auth/");
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
+<<<<<<< HEAD
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
+=======
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         String header = request.getHeader("Authorization");
 
@@ -43,10 +52,19 @@ public class JwtFilter extends OncePerRequestFilter {
                     String email = jwtUtil.extractEmail(token);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
+<<<<<<< HEAD
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities());
+=======
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }

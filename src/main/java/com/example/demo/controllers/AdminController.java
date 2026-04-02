@@ -17,7 +17,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
+<<<<<<< HEAD
 
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin")
@@ -42,7 +45,12 @@ public class AdminController {
                 u.getEmail(),
                 u.getRole().name(),
                 d != null ? d.getId() : null,
+<<<<<<< HEAD
                 d != null ? d.getName() : null));
+=======
+                d != null ? d.getName() : null
+        ));
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     }
 
     // --- Отделы ---
@@ -50,9 +58,14 @@ public class AdminController {
     public List<DepartmentDto> getDepartments() {
         return adminService.getAllDepartments();
     }
+<<<<<<< HEAD
 
     @PostMapping("/departments")
     public DepartmentDto createDept(@RequestBody Department dept) {
+=======
+    @PostMapping("/departments")
+    public Department createDept(@RequestBody Department dept) {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         return adminService.createDepartment(dept);
     }
 
@@ -69,8 +82,13 @@ public class AdminController {
     // --- Пользователи ---
     @GetMapping("/users")
     public List<UserDto> getUsers(@RequestParam(required = false) String query,
+<<<<<<< HEAD
             @RequestParam(required = false) Role role,
             @RequestParam(required = false) Long departmentId) {
+=======
+                                  @RequestParam(required = false) Role role,
+                                  @RequestParam(required = false) Long departmentId) {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         return adminService.findUsers(query, role, departmentId);
     }
 
@@ -90,7 +108,11 @@ public class AdminController {
     }
 
     @DeleteMapping("users/{id}")
+<<<<<<< HEAD
     public void deleteUser(@PathVariable Long id) {
+=======
+    public void deleteUser(@PathVariable Long id){
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         userRepository.deleteById(id);
     }
 
@@ -121,3 +143,7 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803

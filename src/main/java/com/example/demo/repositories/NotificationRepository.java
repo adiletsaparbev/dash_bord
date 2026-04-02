@@ -10,9 +10,12 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
+<<<<<<< HEAD
     // Уведомления по задаче (для удаления при удалении задачи)
     List<Notification> findByTaskId(Long taskId);
 
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     // Все уведомления пользователя (по убыванию даты)
     List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 
@@ -28,8 +31,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("taskId") Long taskId,
             @Param("userId") Long userId);
 
+<<<<<<< HEAD
     // Проверка — отправляли ли уведомление типа TYPE по задаче пользователю за
     // период
+=======
+    // Проверка — отправляли ли уведомление типа TYPE по задаче пользователю за период
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     // Используется планировщиком, чтобы не дублировать TASK_OVERDUE каждый день
     boolean existsByTaskIdAndUserIdAndTypeAndCreatedAtBetween(
             Long taskId,

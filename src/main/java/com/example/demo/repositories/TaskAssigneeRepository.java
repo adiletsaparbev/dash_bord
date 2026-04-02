@@ -1,15 +1,22 @@
 package com.example.demo.repositories;
 // repositories/TaskAssigneeRepository.java
 
+<<<<<<< HEAD
 import com.example.demo.entity.TaskAssignee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+=======
+
+import com.example.demo.entity.TaskAssignee;
+import org.springframework.data.jpa.repository.JpaRepository;
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
 import java.util.List;
 
 public interface TaskAssigneeRepository extends JpaRepository<TaskAssignee, Long> {
     List<TaskAssignee> findByTaskId(Long taskId);
+<<<<<<< HEAD
 
     void deleteByTaskId(Long taskId);
 
@@ -43,4 +50,7 @@ public interface TaskAssigneeRepository extends JpaRepository<TaskAssignee, Long
               AND u.isActive = true
             """)
     List<Long> findDistinctActiveUserIdsByPmId(@Param("pmId") Long pmId);
+=======
+    void deleteByTaskId(Long taskId);
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 }
