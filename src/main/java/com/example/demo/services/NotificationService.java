@@ -16,6 +16,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
+<<<<<<< HEAD
+    private final TelegramService telegramService;
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
     private final NotificationRepository notificationRepository;
 
@@ -31,6 +35,10 @@ public class NotificationService {
                 .isRead(false)
                 .build();
         notificationRepository.save(notification);
+<<<<<<< HEAD
+        telegramService.sendToUser(user, message);
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     }
 
     // =========================================================
@@ -55,7 +63,11 @@ public class NotificationService {
     // =========================================================
     public boolean wasOverdueNotificationSentToday(Long taskId, Long userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+<<<<<<< HEAD
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+=======
         LocalDateTime endOfDay   = startOfDay.plusDays(1);
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         return notificationRepository
                 .existsByTaskIdAndUserIdAndTypeAndCreatedAtBetween(
@@ -108,8 +120,12 @@ public class NotificationService {
     // При открытии задачи — читаем все уведомления по ней
     // =========================================================
     public void markTaskNotificationsAsRead(Long taskId, Long userId) {
+<<<<<<< HEAD
+        List<Notification> notifications = notificationRepository.findByTaskIdAndUserIdAndIsReadFalse(taskId, userId);
+=======
         List<Notification> notifications =
                 notificationRepository.findByTaskIdAndUserIdAndIsReadFalse(taskId, userId);
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         notifications.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(notifications);
     }
@@ -150,4 +166,8 @@ public class NotificationService {
         }
         return r;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803

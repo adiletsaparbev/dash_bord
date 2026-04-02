@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Управление Telegram</title>
+    <style>
+        :root {
+            --primary: #0088cc;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; color: var(--primary); }
+
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .btn:hover { opacity: 0.8; }
+        .btn-test { background: #28a745; }
+
+        .status {
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .token-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Управление Telegram</h2>
+
+    <div class="section">
+        <label>Ваш JWT Токен:</label>
+        <input type="text" id="jwtToken" class="token-input" placeholder="Вставьте токен сюда">
+    </div>
+
+    <div class="section">
+        <h3>1. Привязка аккаунта</h3>
+        <p>Нажмите кнопку, чтобы получить ссылку для бота.</p>
+        <button class="btn" onclick="generateLink()">Получить ссылку</button>
+        <div id="linkContainer" style="display:none; margin-top:15px;">
+            <a id="tgLink" href="#" target="_blank" class="btn" style="background:#555;">Открыть Telegram</a>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>2. Уведомления</h3>
+        <label>
+            <input type="checkbox" id="notifyToggle" onchange="updateSettings()"> Включить уведомления
+        </label>
+    </div>
+
+    <div class="section">
+        <h3>3. Проверка</h3>
+        <button class="btn btn-test" onclick="sendTest()">Отправить тестовое сообщение</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+</div>
+
+<script>
+    const API_BASE = "/api/telegram";
+
+    // Функция для заголовков с токеном
+    function getHeaders() {
+        const token = document.getElementById('jwtToken').value;
+        return {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    async function generateLink() {
+        showStatus("Генерация ссылки...", "#eee");
+        try {
+            const response = await fetch(`${API_BASE}/get-link`, { headers: getHeaders() });
+            const link = await response.text();
+
+            document.getElementById('tgLink').href = link;
+            document.getElementById('linkContainer').style.display = 'block';
+            showStatus("Ссылка готова!", "#d4edda");
+        } catch (e) {
+            showStatus("Ошибка: " + e, "#f8d7da");
+        }
+    }
+
+    async function updateSettings() {
+        const isEnabled = document.getElementById('notifyToggle').checked;
+        const url = `${API_BASE}/settings?enabled=${isEnabled}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: getHeaders()
+            });
+            showStatus("Настройки сохранены", "#d4edda");
+        } catch (e) {
+            showStatus("Ошибка настроек", "#f8d7da");
+        }
+    }
+
+    async function sendTest() {
+        try {
+            const response = await fetch(`${API_BASE}/test`, {
+                method: 'POST',
+                headers: getHeaders()
+            });
+            const text = await response.text();
+            showStatus("Результат: " + text, "#d4edda");
+        } catch (e) {
+            showStatus("Ошибка при тесте", "#f8d7da");
+        }
+    }
+
+    function showStatus(msg, color) {
+        const box = document.getElementById('statusBox');
+        box.innerText = msg;
+        box.style.backgroundColor = color;
+        box.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

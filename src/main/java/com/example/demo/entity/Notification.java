@@ -8,7 +8,15 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notifications")
+<<<<<<< HEAD
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+=======
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 public class Notification {
 
     @Id
@@ -38,4 +46,8 @@ public class Notification {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803

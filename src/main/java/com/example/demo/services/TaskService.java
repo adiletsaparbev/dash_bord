@@ -11,6 +11,10 @@ import com.example.demo.enums.TaskStatus;
 import com.example.demo.exception.AccessDeniedException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repositories.*;
+<<<<<<< HEAD
+import com.example.demo.repositories.NotificationRepository;
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,10 @@ public class TaskService {
     private final TagRepository tagRepository;
     private final NotificationService notificationService;
     private final TaskHistoryRepository taskHistoryRepository; // ← добавлен
+<<<<<<< HEAD
+    private final NotificationRepository notificationRepository; // ← добавлен
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
     // =========================================================
     // 1. Список задач по ролям
@@ -41,11 +49,23 @@ public class TaskService {
     public List<TaskResponse> getAllTasks(String email) {
         User user = getUser(email);
         Role role = user.getRole();
+<<<<<<< HEAD
+
+        int i;
+        for(i = 0; i < 1000; i++){
+            System.out.println("TEST " + i);
+        }
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         List<Task> tasks = taskRepository.findAll();
         return tasks.stream()
                 .filter(task -> hasAccess(task, user, role))
                 .map(this::toResponse)
                 .toList();
+<<<<<<< HEAD
+
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     }
 
     // =========================================================
@@ -66,10 +86,19 @@ public class TaskService {
     }
 
     private boolean hasAccess(Task task, User user, Role role) {
+<<<<<<< HEAD
+        if (role == Role.ADMIN)
+            return true;
+        if (role == Role.MANAGER) {
+            Department department = task.getProject().getDepartment();
+            if (department == null || department.getManager() == null)
+                return false;
+=======
         if (role == Role.ADMIN) return true;
         if (role == Role.MANAGER) {
             Department department = task.getProject().getDepartment();
             if (department == null || department.getManager() == null) return false;
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
             return department.getManager().getId().equals(user.getId());
         }
         if (role == Role.PM) {
@@ -102,6 +131,16 @@ public class TaskService {
             }
         }
 
+<<<<<<< HEAD
+        if (currentUser.getRole() == Role.PM) {
+            if (project.getPm() == null || !project.getPm().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException(
+                        "PM может создавать задачи только в проектах, где он назначен менеджером проекта");
+            }
+        }
+
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         Task task = Task.builder()
                 .title(request.getTitle().trim())
                 .description(request.getDescription())
@@ -135,7 +174,11 @@ public class TaskService {
                 }
                 if (assignee.getDepartment() == null || project.getDepartment() == null
                         || !assignee.getDepartment().getId()
+<<<<<<< HEAD
+                                .equals(project.getDepartment().getId())) {
+=======
                         .equals(project.getDepartment().getId())) {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                     throw new AccessDeniedException(
                             "Исполнитель должен принадлежать тому же отделу, что и проект");
                 }
@@ -144,12 +187,24 @@ public class TaskService {
             task.getAssignees().add(TaskAssignee.builder()
                     .task(task).user(assignee).build());
         }
+<<<<<<< HEAD
+        // 12345612345123456789ojhgfdsafghjk,k,hmgtrfedw
+        int i;
+        for(i = 0; i < 1000; i++){
+            System.out.println("TEST " + i);
+        }
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         Task saved = taskRepository.save(task);
 
         if (request.getAttachmentIds() != null && !request.getAttachmentIds().isEmpty()) {
+<<<<<<< HEAD
+            List<Attachment> attachments = attachmentRepository.findAllById(request.getAttachmentIds());
+=======
             List<Attachment> attachments =
                     attachmentRepository.findAllById(request.getAttachmentIds());
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
             for (Attachment att : attachments) {
                 att.setEntityType(EntityType.TASK);
                 att.setEntityId(saved.getId());
@@ -168,6 +223,13 @@ public class TaskService {
         }
 
         // === Уведомление: Новая задача назначена ===
+<<<<<<< HEAD
+        saved.getAssignees().forEach(ta -> notificationService.send(
+                ta.getUser(),
+                "TASK_ASSIGNED",
+                "Вам назначена новая задача: \"" + saved.getTitle() + "\"",
+                saved));
+=======
         saved.getAssignees().forEach(ta ->
                 notificationService.send(
                         ta.getUser(),
@@ -176,6 +238,7 @@ public class TaskService {
                         saved
                 )
         );
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         // === История: создание задачи ===
         recordHistory(saved, currentUser, "created",
@@ -186,7 +249,11 @@ public class TaskService {
 
     // =========================================================
     // 4. Получение одной задачи
+<<<<<<< HEAD
+    // При открытии — автоматически читаем уведомления по задаче
+=======
     //    При открытии — автоматически читаем уведомления по задаче
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     // =========================================================
     public TaskResponse getTaskById(Long taskId, String email) {
         User user = getUser(email);
@@ -205,7 +272,36 @@ public class TaskService {
     public TaskResponse updateTask(Long taskId, TaskUpdateRequest request, String email) {
         User user = getUser(email);
         Task task = findTask(taskId);
+<<<<<<< HEAD
+
+        // TEAM может менять только статус — используем отдельное действие для валидации
+        String action = (user.getRole() == Role.TEAM) ? "STATUS_CHANGE" : "EDIT";
+        validateTaskAccess(user, task, action);
+
+        // Если TEAM — разрешаем только изменение статуса, всё остальное игнорируем
+        if (user.getRole() == Role.TEAM) {
+            if (request.getStatus() == null) {
+                throw new AccessDeniedException("Роль TEAM может изменять только статус задачи");
+            }
+            // Выполняем только смену статуса
+            if (request.getStatus() != task.getStatus()) {
+                String oldStatus = task.getStatus() != null ? task.getStatus().name() : null;
+                String newStatus = request.getStatus().name();
+                recordHistory(task, user, "status", oldStatus, newStatus);
+                task.setStatus(request.getStatus());
+                if (request.getStatus() == TaskStatus.DONE) {
+                    task.setCompletedAt(java.time.LocalDateTime.now());
+                    task.setOverdue(false);
+                }
+                String msg = "Статус задачи \"" + task.getTitle() + "\" изменён: "
+                        + oldStatus + " → " + newStatus;
+                notificationService.notifyTaskParticipants(task, "STATUS_CHANGED", msg, user);
+            }
+            return toResponse(taskRepository.save(task));
+        }
+=======
         validateTaskAccess(user, task, "EDIT");
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         // --- Название ---
         if (request.getTitle() != null && !request.getTitle().trim().isEmpty()
@@ -250,7 +346,12 @@ public class TaskService {
 
         // --- Статус ---
         if (request.getStatus() != null) {
+<<<<<<< HEAD
+            if (user.getRole() == Role.ADMIN || user.getRole() == Role.PM
+                    || user.getRole() == Role.MANAGER || user.getRole() == Role.TEAM) {
+=======
             if (user.getRole() == Role.ADMIN || user.getRole() == Role.PM) {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                 if (request.getStatus() != task.getStatus()) {
                     String oldStatus = task.getStatus() != null ? task.getStatus().name() : null;
                     String newStatus = request.getStatus().name();
@@ -269,10 +370,18 @@ public class TaskService {
                     notificationService.notifyTaskParticipants(task, "STATUS_CHANGED", msg, user);
                 }
             } else {
+<<<<<<< HEAD
+                throw new AccessDeniedException("Менять статус задачи может только ADMIN, PM, MANAGER или TEAM");
+            }
+        }
+
+
+=======
                 throw new AccessDeniedException("Менять статус задачи может только ADMIN или PM");
             }
         }
 
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         // --- Исполнители ---
         if (request.getAssigneeIds() != null && !request.getAssigneeIds().isEmpty()) {
             if (user.getRole() == Role.ADMIN || user.getRole() == Role.MANAGER) {
@@ -280,8 +389,13 @@ public class TaskService {
                 // Старые исполнители для истории
                 String oldAssignees = task.getAssignees() != null
                         ? task.getAssignees().stream()
+<<<<<<< HEAD
+                                .map(a -> a.getUser().getFullName())
+                                .reduce((a, b) -> a + ", " + b).orElse("")
+=======
                         .map(a -> a.getUser().getFullName())
                         .reduce((a, b) -> a + ", " + b).orElse("")
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                         : "";
 
                 task.getAssignees().clear();
@@ -299,7 +413,11 @@ public class TaskService {
                         if (task.getProject().getDepartment() == null
                                 || assignee.getDepartment() == null
                                 || !task.getProject().getDepartment().getId()
+<<<<<<< HEAD
+                                        .equals(assignee.getDepartment().getId())) {
+=======
                                 .equals(assignee.getDepartment().getId())) {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                             throw new AccessDeniedException(
                                     "Исполнитель должен быть из того же отдела");
                         }
@@ -319,6 +437,13 @@ public class TaskService {
                 recordHistory(task, user, "assignees", oldAssignees, newAssignees);
 
                 // === Уведомление: Назначен новый исполнитель ===
+<<<<<<< HEAD
+                task.getAssignees().forEach(ta -> notificationService.send(
+                        ta.getUser(),
+                        "TASK_ASSIGNED",
+                        "Вы назначены исполнителем задачи: \"" + task.getTitle() + "\"",
+                        task));
+=======
                 task.getAssignees().forEach(ta ->
                         notificationService.send(
                                 ta.getUser(),
@@ -327,6 +452,7 @@ public class TaskService {
                                 task
                         )
                 );
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
             } else {
                 throw new AccessDeniedException("У вас нет прав на изменение исполнителей");
@@ -344,7 +470,11 @@ public class TaskService {
         Task task = findTask(taskId);
 
         if (user.getRole() == Role.ADMIN) {
+<<<<<<< HEAD
+            deleteTaskCascade(task);
+=======
             taskRepository.delete(task);
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
             return;
         }
 
@@ -353,20 +483,45 @@ public class TaskService {
                     !task.getProject().getDepartment().getManager().getId().equals(user.getId())) {
                 throw new AccessDeniedException("Нет доступа к задачам другого отдела");
             }
+<<<<<<< HEAD
+            deleteTaskCascade(task);
+=======
             taskRepository.delete(task);
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
             return;
         }
 
         throw new AccessDeniedException("У вас нет прав на удаление задачи");
     }
 
+<<<<<<< HEAD
+    private void deleteTaskCascade(Task task) {
+        // Удаляем записи без cascade на стороне Task
+        taskHistoryRepository.deleteAll(
+                taskHistoryRepository.findByTaskIdOrderByChangedAtAsc(task.getId()));
+        notificationRepository.deleteAll(
+                notificationRepository.findByTaskId(task.getId()));
+        // Удаляем вложения задачи (entityId-based, без FK)
+        attachmentRepository.deleteByEntityTypeAndEntityId(
+                com.example.demo.enums.EntityType.TASK, task.getId());
+        taskRepository.delete(task);
+    }
+
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
     // =========================================================
     // Запись истории изменений
     // Не пишем запись, если значение не изменилось
     // =========================================================
     private void recordHistory(Task task, User changedBy,
+<<<<<<< HEAD
+            String fieldName, String oldValue, String newValue) {
+        if (Objects.equals(oldValue, newValue))
+            return;
+=======
                                String fieldName, String oldValue, String newValue) {
         if (Objects.equals(oldValue, newValue)) return;
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         TaskHistory history = TaskHistory.builder()
                 .task(task)
@@ -384,7 +539,12 @@ public class TaskService {
     // =========================================================
     private void validateTaskAccess(User user, Task task, String action) {
         Role role = user.getRole();
+<<<<<<< HEAD
+        if (role == Role.ADMIN)
+            return;
+=======
         if (role == Role.ADMIN) return;
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
         if (role == Role.MANAGER) {
             if (!hasDepartmentAndManager(task.getProject()) ||
@@ -419,7 +579,12 @@ public class TaskService {
                 throw new AccessDeniedException(
                         "Команда может видеть только задачи, где она назначена");
             }
+<<<<<<< HEAD
+            // TEAM может менять только статус — остальные поля запрещены
+            if (!"VIEW".equals(action) && !"STATUS_CHANGE".equals(action)) {
+=======
             if (!"VIEW".equals(action)) {
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                 throw new AccessDeniedException("У роли TEAM нет прав на изменение задач");
             }
             return;

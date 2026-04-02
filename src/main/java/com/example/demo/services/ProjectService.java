@@ -1,6 +1,10 @@
 package com.example.demo.services;
 
 import com.example.demo.dto.request.ProjectRequest;
+<<<<<<< HEAD
+import com.example.demo.dto.response.ProjectResponse;
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 import com.example.demo.entity.*;
 import com.example.demo.enums.Role;
 import com.example.demo.exception.AccessDeniedException;
@@ -10,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+<<<<<<< HEAD
+import java.util.Collections;
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 import java.util.List;
 import java.util.Objects;
 
@@ -21,6 +29,10 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+<<<<<<< HEAD
+    private final TaskRepository taskRepository;
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 
     public Project create(ProjectRequest request, String email) {
         User currentUser = userRepository.findByEmail(email)
@@ -30,10 +42,13 @@ public class ProjectService {
         if (request.getPmId() != null) {
             pm = userRepository.findById(request.getPmId())
                     .orElseThrow(() -> new ResourceNotFoundException("ПМ не найден"));
+<<<<<<< HEAD
+=======
 
             if (pm.getRole() != Role.PM) {
                 throw new IllegalArgumentException("Назначенный пользователь должен иметь роль PM");
             }
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         }
 
         Department department = null;
@@ -48,10 +63,27 @@ public class ProjectService {
 
         // MANAGER — только свой департамент
         else if (currentUser.getRole() == Role.MANAGER) {
+<<<<<<< HEAD
+            department = departmentRepository.findFirstByManagerId(currentUser.getId())
+                    .orElseThrow(() -> new AccessDeniedException("У руководителя нет назначенного департамента"));
+        }
+
+        // PM — свой отдел, себя назначает PM
+        else if (currentUser.getRole() == Role.PM) {
+            department = currentUser.getDepartment();
+            if (department == null) {
+                throw new AccessDeniedException("У PM нет назначенного отдела");
+            }
+            // PM всегда назначает себя PM проекта
+            pm = currentUser;
+        }
+
+=======
             department = departmentRepository.findByManagerId(currentUser.getId())
                     .orElseThrow(() -> new AccessDeniedException("У руководителя нет назначенного департамента"));
         }
 
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         else {
             throw new AccessDeniedException("У вас нет прав на создание проекта");
         }
@@ -70,8 +102,13 @@ public class ProjectService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
         Department department = null;
+<<<<<<< HEAD
+        if (user.getRole() == Role.MANAGER) {
+            department = departmentRepository.findFirstByManagerId(user.getId())
+=======
         if(user.getRole() == Role.MANAGER){
             department = departmentRepository.findByManagerId(user.getId())
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
                     .orElseThrow(() -> new ResourceNotFoundException("Manager не состоит в департаментах"));
         }
 
@@ -79,7 +116,19 @@ public class ProjectService {
             case ADMIN -> projectRepository.findAll();
             case MANAGER -> projectRepository.findByDepartmentId(department.getId());
             case PM -> projectRepository.findByPmId(user.getId());
+<<<<<<< HEAD
+            case TEAM -> {
+                // TEAM видит все проекты своего отдела
+                Department dept = user.getDepartment();
+                if (dept != null) {
+                    yield projectRepository.findByDepartmentId(dept.getId());
+                }
+                // фоллбэк: если отдел не назначен, ищем через project_members
+                yield projectRepository.findByMemberUserId(user.getId());
+            }
+=======
             case TEAM -> projectRepository.findByMemberUserId(user.getId()); // через project_members
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
         };
     }
 
@@ -112,6 +161,21 @@ public class ProjectService {
             return p;
         }
 
+<<<<<<< HEAD
+        // TEAM — проекты своего отдела или через project_members
+        if (user.getRole() == Role.TEAM) {
+            Department dept = user.getDepartment();
+            if (dept != null && p.getDepartment() != null
+                    && dept.getId().equals(p.getDepartment().getId())) {
+                return p;
+            }
+            boolean isMember = p.getMembers() != null &&
+                    p.getMembers().stream()
+                            .anyMatch(m -> m.getUser().getId().equals(user.getId()));
+            if (!isMember) {
+                throw new AccessDeniedException("Нет доступа к проекту");
+            }
+=======
         // TEAM — только если состоит в проекте
         if (user.getRole() == Role.TEAM) {
             boolean isMember = p.getMembers() != null &&
@@ -122,6 +186,7 @@ public class ProjectService {
                 throw new AccessDeniedException("Нет доступа к проекту");
             }
 
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
             return p;
         }
 
@@ -186,4 +251,56 @@ public class ProjectService {
     public void delete(Long id) {
         projectRepository.deleteById(id);
     }
+<<<<<<< HEAD
+
+    // ─── DTO обёртки ─────────────────────────────────────────────────────────
+
+    public List<ProjectResponse> getAllAsResponse(String email) {
+        return getAll(email).stream().map(this::toProjectResponse).toList();
+    }
+
+    public ProjectResponse getByIdAsResponse(Long id, String email) {
+        return toProjectResponse(getById(id, email));
+    }
+
+    public ProjectResponse createAsResponse(ProjectRequest request, String email) {
+        return toProjectResponse(create(request, email));
+    }
+
+    public ProjectResponse updateAsResponse(Long id, ProjectRequest request, String email) {
+        return toProjectResponse(update(id, request, email));
+    }
+
+    private ProjectResponse toProjectResponse(Project p) {
+        ProjectResponse r = new ProjectResponse();
+        r.setId(p.getId());
+        r.setName(p.getName());
+        r.setDescription(p.getDescription());
+        r.setStatus(p.getStatus() != null ? p.getStatus().name() : null);
+
+        if (p.getPm() != null) {
+            r.setPmId(p.getPm().getId());
+            r.setPmName(p.getPm().getFullName());
+        }
+
+        if (p.getDepartment() != null) {
+            r.setDepartmentId(p.getDepartment().getId());
+            r.setDepartmentName(p.getDepartment().getName());
+        }
+
+        if (p.getMembers() != null) {
+            r.setMemberIds(p.getMembers().stream()
+                    .map(m -> m.getUser().getId()).toList());
+            r.setMemberNames(p.getMembers().stream()
+                    .map(m -> m.getUser().getFullName()).toList());
+        } else {
+            r.setMemberIds(Collections.emptyList());
+            r.setMemberNames(Collections.emptyList());
+        }
+
+        r.setTaskCount((int) taskRepository.countByProjectId(p.getId()));
+        return r;
+    }
+=======
+>>>>>>> c9a64acd04492b6ec54c00c0eac45d06b6618803
 }
